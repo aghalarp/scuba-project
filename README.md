@@ -1,4 +1,4 @@
 scuba-project
 =============
 
-A dive planning project for ICS 414
+A dive planning project. Readme will be updated with usage and installation instructions.
