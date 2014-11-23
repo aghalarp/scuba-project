@@ -1,3 +1,5 @@
+import javafx.scene.control.Tab;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -10,39 +12,60 @@ import java.util.Map;
  */
 public class DiveTable {
 
-    List<List<Integer>> endOfDiveTable1 = new ArrayList<List<Integer>>();
-
     // Table 1: Mapping depth (in ft.) to another map of dive time minutes mapped to pressure group.
     Map<Integer, Map<Integer, TableOneCellOutput>> endOfDiveTable = new LinkedHashMap<Integer, Map<Integer, TableOneCellOutput>>();
 
     // Table 2: Mapping Pressure Group to another map of surface interval minutes mapped to pressure group.
     Map<String, Map<Integer, String>> surfaceIntervalTimeTable = new LinkedHashMap<String, Map<Integer, String>>();
 
-    // Table 3:
+    // Table 3: Mapping Pressure Group to another map of depth mapped to an array of Residual Nitrogen Times and Max Dive Times.
     Map<String, Map<Integer, Integer[]>> repetitiveDiveTimeTable = new LinkedHashMap<String, Map<Integer, Integer[]>>();
 
-    String currentPressureGroup;
+    Map<Integer, SingleDiveData> diveResultsMap = new LinkedHashMap<Integer, SingleDiveData>();
+
+    //If 0, no errors with input dive data. If > 0, the number indicates which dive# the FIRST error occurred at.
+    //Can then use this number on diveResultsMap to grab the actual error.
+    int errorFound = 0;
 
     public static void main(String[] args) {
-        System.out.println("Hi");
 
-        LinkedHashMap<Integer, Integer> map = new LinkedHashMap<Integer, Integer>();
-        map.put(3, 3);
-        map.put(2, 2);
-        map.put(5, 5);
-        map.put(4, 4);
-        map.put(1, 1);
+        //Tests
+        //Legal Dive
+        System.out.println("Legal dive test");
+        List<Integer> testDives = new ArrayList<Integer>();
+        testDives.add(80); //Depth
+        testDives.add(41); //Time
+        testDives.add(118); //SIT
 
-        for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
-            System.out.println(entry.getKey() + ", " + entry.getValue());
-        }
-        System.out.println();
+        testDives.add(20); //Depth
+        testDives.add(21); //Time
+        testDives.add(22); //SIT
 
-        Iterator<Map.Entry<Integer, Integer>> iter = map.entrySet().iterator();
-        while(iter.hasNext()) {
-            Map.Entry mapEntry = iter.next();
-            System.out.println(mapEntry.getKey() + ", " + mapEntry.getValue());
-        }
+        testDives.add(10);
+        testDives.add(11);
+        testDives.add(12);
+
+        DiveTable dt = new DiveTable();
+        dt.calculateDiveTableResults(testDives);
+        System.out.println(dt);
+
+
+        //Illegal Dive
+        System.out.println("\n\nIllegal dive test");
+        List<Integer> testDives2 = new ArrayList<Integer>();
+        testDives2.add(50);
+        testDives2.add(55);
+        testDives2.add(110);
+        testDives2.add(50);
+        testDives2.add(51);
+        testDives2.add(52);
+        testDives2.add(10);
+        testDives2.add(11);
+        testDives2.add(12);
+
+        DiveTable dt2 = new DiveTable();
+        dt2.calculateDiveTableResults(testDives2);
+        System.out.println(dt2);
     }
 
 
@@ -50,7 +73,7 @@ public class DiveTable {
      * Constructor that populates all three NAUI dive tables.
      */
     public DiveTable() {
-        // Populate Table 1
+        // Populate Table 1: endOfDiveTable
         // Row 40
         Map<Integer, TableOneCellOutput> row40Map = new LinkedHashMap<Integer, TableOneCellOutput>(); //Mapping time (in mins.) to Pressure Group
         row40Map.put(5, new TableOneCellOutput("A"));
@@ -189,7 +212,7 @@ public class DiveTable {
 
 
 
-        // Populate Table 2
+        // Populate Table 2: surfaceIntervalTimeTable
         // Column A
         Map<Integer, String> columnAMap = new LinkedHashMap<Integer, String>();
         columnAMap.put(10, "A");
@@ -329,7 +352,9 @@ public class DiveTable {
         surfaceIntervalTimeTable.put("L", columnLMap);
 
 
-        //Populate Table 3
+        //Populate Table 3: repetitiveDiveTimeTable
+        //Note: I am entering rows in the opposite direction (left to right) as displayed on official NAUI table 3.
+
         // Row A
         Map<Integer, Integer[]> rowAMap = new LinkedHashMap<Integer, Integer[]>();
         rowAMap.put(40, new Integer[]{7, 123});
@@ -375,24 +400,347 @@ public class DiveTable {
 
         repetitiveDiveTimeTable.put("C", rowCMap);
 
+        // Row D
+        Map<Integer, Integer[]> rowDMap = new LinkedHashMap<Integer, Integer[]>();
+        rowDMap.put(40, new Integer[]{37, 93});
+        rowDMap.put(50, new Integer[]{29, 51});
+        rowDMap.put(60, new Integer[]{24, 31});
+        rowDMap.put(70, new Integer[]{20, 25});
+        rowDMap.put(80, new Integer[]{18, 17});
+        rowDMap.put(90, new Integer[]{16, 9});
+        rowDMap.put(100, new Integer[]{14, 8});
+        rowDMap.put(110, new Integer[]{13, 0});
+        rowDMap.put(120, new Integer[]{12, 0});
+        rowDMap.put(130, new Integer[]{11, 0});
+
+        repetitiveDiveTimeTable.put("D", rowDMap);
+
+        // Row E
+        Map<Integer, Integer[]> rowEMap = new LinkedHashMap<Integer, Integer[]>();
+        rowEMap.put(40, new Integer[]{49, 81});
+        rowEMap.put(50, new Integer[]{38, 42});
+        rowEMap.put(60, new Integer[]{30, 25});
+        rowEMap.put(70, new Integer[]{26, 19});
+        rowEMap.put(80, new Integer[]{23, 12});
+        rowEMap.put(90, new Integer[]{20, 5});
+        rowEMap.put(100, new Integer[]{18, 4});
+        rowEMap.put(110, new Integer[]{16, 0});
+        rowEMap.put(120, new Integer[]{15, 0});
+        rowEMap.put(130, new Integer[]{13, 0});
+
+        repetitiveDiveTimeTable.put("E", rowEMap);
+
+        // Row F
+        Map<Integer, Integer[]> rowFMap = new LinkedHashMap<Integer, Integer[]>();
+        rowFMap.put(40, new Integer[]{61, 69});
+        rowFMap.put(50, new Integer[]{47, 33});
+        rowFMap.put(60, new Integer[]{36, 19});
+        rowFMap.put(70, new Integer[]{31, 14});
+        rowFMap.put(80, new Integer[]{28, 7});
+        rowFMap.put(90, new Integer[]{24, 0});
+        rowFMap.put(100, new Integer[]{22, 0});
+        rowFMap.put(110, new Integer[]{20, 0});
+        rowFMap.put(120, new Integer[]{18, 0});
+        rowFMap.put(130, new Integer[]{16, 0});
+
+        repetitiveDiveTimeTable.put("F", rowFMap);
+
+        // Row G
+        Map<Integer, Integer[]> rowGMap = new LinkedHashMap<Integer, Integer[]>();
+        rowGMap.put(40, new Integer[]{73, 57});
+        rowGMap.put(50, new Integer[]{56, 24});
+        rowGMap.put(60, new Integer[]{44, 11});
+        rowGMap.put(70, new Integer[]{37, 8});
+        rowGMap.put(80, new Integer[]{32, 0});
+        rowGMap.put(90, new Integer[]{29, 0});
+        rowGMap.put(100, new Integer[]{26, 0});
+        rowGMap.put(110, new Integer[]{24, 0});
+        rowGMap.put(120, new Integer[]{21, 0});
+        rowGMap.put(130, new Integer[]{19, 0});
+
+        repetitiveDiveTimeTable.put("G", rowGMap);
+
+        // Row H
+        Map<Integer, Integer[]> rowHMap = new LinkedHashMap<Integer, Integer[]>();
+        rowHMap.put(40, new Integer[]{87, 43});
+        rowHMap.put(50, new Integer[]{66, 14});
+        rowHMap.put(60, new Integer[]{52, 0});
+        rowHMap.put(70, new Integer[]{43, 0});
+        rowHMap.put(80, new Integer[]{38, 0});
+        rowHMap.put(90, new Integer[]{33, 0});
+        rowHMap.put(100, new Integer[]{30, 0});
+        rowHMap.put(110, new Integer[]{27, 0});
+        rowHMap.put(120, new Integer[]{25, 0});
+        rowHMap.put(130, new Integer[]{22, 0});
+
+        repetitiveDiveTimeTable.put("H", rowHMap);
+
+        // Row I
+        Map<Integer, Integer[]> rowIMap = new LinkedHashMap<Integer, Integer[]>();
+        rowIMap.put(40, new Integer[]{101, 29});
+        rowIMap.put(50, new Integer[]{76, 4});
+        rowIMap.put(60, new Integer[]{61, 0});
+        rowIMap.put(70, new Integer[]{50, 0});
+        rowIMap.put(80, new Integer[]{43, 0});
+        rowIMap.put(90, new Integer[]{38, 0});
+        rowIMap.put(100, new Integer[]{34, 0});
+        rowIMap.put(110, new Integer[]{31, 0});
+        rowIMap.put(120, new Integer[]{28, 0});
+        rowIMap.put(130, new Integer[]{25, 0});
+
+        repetitiveDiveTimeTable.put("I", rowIMap);
+
+        // Row J
+        Map<Integer, Integer[]> rowJMap = new LinkedHashMap<Integer, Integer[]>();
+        rowJMap.put(40, new Integer[]{116, 14});
+        rowJMap.put(50, new Integer[]{87, 4});
+        rowJMap.put(60, new Integer[]{70, 0});
+        rowJMap.put(70, new Integer[]{57, 0});
+        rowJMap.put(80, new Integer[]{48, 0});
+        rowJMap.put(90, new Integer[]{43, 0});
+        rowJMap.put(100, new Integer[]{38, 0});
+        rowJMap.put(110, new Integer[]{null, null}); //Avoid Repetitive Dive over 100 ft.
+        rowJMap.put(120, new Integer[]{null, null}); //Avoid
+        rowJMap.put(130, new Integer[]{null, null}); //Avoid
+
+        repetitiveDiveTimeTable.put("J", rowJMap);
+
+        // Row K
+        Map<Integer, Integer[]> rowKMap = new LinkedHashMap<Integer, Integer[]>();
+        rowKMap.put(40, new Integer[]{138, 0});
+        rowKMap.put(50, new Integer[]{99, 0});
+        rowKMap.put(60, new Integer[]{79, 0});
+        rowKMap.put(70, new Integer[]{64, 0});
+        rowKMap.put(80, new Integer[]{54, 0});
+        rowKMap.put(90, new Integer[]{47, 0});
+        rowKMap.put(100, new Integer[]{null, null});
+        rowKMap.put(110, new Integer[]{null, null}); //Avoid Repetitive Dive over 100 ft.
+        rowKMap.put(120, new Integer[]{null, null}); //Avoid
+        rowKMap.put(130, new Integer[]{null, null}); //Avoid
+
+        repetitiveDiveTimeTable.put("K", rowKMap);
+
+        // Row L
+        Map<Integer, Integer[]> rowLMap = new LinkedHashMap<Integer, Integer[]>();
+        rowLMap.put(40, new Integer[]{161, 0});
+        rowLMap.put(50, new Integer[]{111, 0});
+        rowLMap.put(60, new Integer[]{88, 0});
+        rowLMap.put(70, new Integer[]{72, 0});
+        rowLMap.put(80, new Integer[]{61, 0});
+        rowLMap.put(90, new Integer[]{53, 0});
+        rowLMap.put(100, new Integer[]{null, null});
+        rowLMap.put(110, new Integer[]{null, null}); //Avoid Repetitive Dive over 100 ft.
+        rowLMap.put(120, new Integer[]{null, null}); //Avoid
+        rowLMap.put(130, new Integer[]{null, null}); //Avoid
+
+        repetitiveDiveTimeTable.put("L", rowLMap);
 
     }
 
+    /**
+     * Takes an ArrayList containing the user's dive information (dive depth, dive time, surface interval time),
+     * and outputs data required to generate a proper dive profile.
+     *
+     * @param diveInfo The user's dive data.
+     */
+    public void calculateDiveTableResults (List<Integer> diveInfo) {
+        String currentPressureGroup = ""; //Changes as we continuously run through loop.
+
+        //Input: depth, time, SIT
+        //Output: End-of-Dive Pressure Group, post-SIT Pressure Group, decompression stop times.
+
+        for (int i = 0; i < diveInfo.size(); i += 3) { //Note: Incrementing by 3, not 1.
+
+            Integer diveNumber = ((i / 3) + 1); //Every 3rd element in list indicates a new dive.
+            Integer diveDepth = diveInfo.get(i); //Depth is indicated first.
+            Integer diveTime = diveInfo.get(i + 1); //Then DiveTime.
+            Integer surfaceIntervalTime = diveInfo.get(i + 2); //Then Surface Interval Time.
+
+            //Will hold all input data and final calculated data for each dive.
+            SingleDiveData diveData = new SingleDiveData(diveDepth, diveTime, surfaceIntervalTime);
+
+//            System.out.println("Dive #" + diveNumber + ", Depth: " + diveDepth + ", Time: " + diveTime + ", Surface Interval Time: " + surfaceIntervalTime);
+
+            //For all non-initial dives, we look at repetitive dive table 3 and make adjustments to user input.
+            if (i != 0) {
+                //Table 3 Lookup
+                Integer[] tableThreeResult = repetitiveDiveTimeTableLookup(currentPressureGroup, diveDepth, diveTime);
+
+                //Check if diveTime is greater than Adjusted Maximum Dive Time. If it is, must report error.
+                if(diveTime > tableThreeResult[1]) {
+                    this.errorFound = diveNumber; //Set error location
+                    diveData.errorMessage = "Error at Dive #" + diveNumber + ": Dive Time is greater than allowed Adjusted Maximum Dive Time.";
+                }
+
+                diveTime = diveInfo.get(i + 1) + tableThreeResult[0]; //TotalNitrogenTime = ActualDiveTime + Residual Nitrogen Time.
+                diveData.totalNitrogenTime = diveTime;
+//                System.out.println("\tTotal Nitrogen Time: " + diveTime);
+            }
+
+            //Table 1 Lookup
+            TableOneCellOutput tableOneResult = tableOneLookup(diveDepth, diveTime);
+
+            currentPressureGroup = tableOneResult.pressureGroup; //Currently indicates End-Of-Dive PG.
+            diveData.endOfDivePG = currentPressureGroup;
+
+            Integer decompressionTime = tableOneResult.decompressionTime;
+            diveData.decompressionTime = decompressionTime;
+
+//            System.out.println("\tEnd-Of-Dive Pressure Group: " + currentPressureGroup);
+//            if (decompressionTime != 0) {
+//                System.out.println("\tDecompression Time Required: " + decompressionTime);
+//            } else {
+//                System.out.println("\tDecompression Time Required: None");
+//            }
+
+            //Table 2 Lookup
+            //Now currentPressureGroup will hold the new Pressure Group post-table2.
+            currentPressureGroup = surfaceIntervalTimeLookup(currentPressureGroup, surfaceIntervalTime);
+            diveData.postSurfaceIntervalPG = currentPressureGroup;
+//            System.out.println("\tPost-Surface-Interval-Time Pressure Group: " + currentPressureGroup);
+
+            //Add diveData to diveResultsMap
+            this.diveResultsMap.put(diveNumber, diveData);
+
+            //If error has been found during calculations, exit method prematurely.
+            if (this.errorFound > 0) {
+                return;
+            }
+        }
+    }
+
+    public TableOneCellOutput tableOneLookup(Integer diveDepth, Integer diveTime) {
+        for (Map.Entry<Integer, Map<Integer, TableOneCellOutput>> entry : endOfDiveTable.entrySet()) {
+            //System.out.println(entry.getKey() + ", " + entry.getValue());
+            if (entry.getKey() >= diveDepth) { //Note: We round up to the next depth key for safety reasons.
+                //Found key. Now iterate through its nested map.
+                Map<Integer, TableOneCellOutput> nestedMap = entry.getValue();
+                for (Map.Entry<Integer, TableOneCellOutput> nestedEntry : nestedMap.entrySet()) {
+                    if (nestedEntry.getKey() >= diveTime) { //Rounding up to next time key for safety reasons.
+                        //Found our target cell. Return it.
+                        TableOneCellOutput resultCell = nestedEntry.getValue();
+
+                        return resultCell;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public String surfaceIntervalTimeLookup(String pressureGroup, Integer surfaceIntervalTime) {
+        //We have a previously calculated pressure group at this point, so we use it to grab the appropriate
+        //column in the S.I.T. table.
+        Map<Integer, String> columnMap = surfaceIntervalTimeTable.get(pressureGroup);
+
+        //Now we iterate through map for given surface interval time.
+        //Note: Though the officialNAUI table 2 contains a range of times in each cell, our map only holds the
+        //lower bound time of each cell. This is the time that we will be comparing to.
+        for (Map.Entry<Integer, String> entry : columnMap.entrySet()) {
+            if (entry.getKey() <= surfaceIntervalTime) {
+                //Found target cell. Return new Pressure Group letter.
+                String newPressureGroup = entry.getValue();
+
+                return newPressureGroup;
+            }
+        }
+
+        return null;
+    }
+
+    public Integer[] repetitiveDiveTimeTableLookup(String pressureGroup, Integer diveDepth, Integer diveTime) {
+        //Use previously calculated Pressure Group (from table 2 output) to grab relevant row mapping in Table 3.
+        Map<Integer, Integer[]> rowMap = repetitiveDiveTimeTable.get(pressureGroup);
+
+        //Now we iterate through map for given depth.
+        //Note: rowMap is a mapping of dive depth to a size 2 integer array containing:
+        //array[0]: Residual Nitrogen Time
+        //array[1]: Adjusted Max Dive Time
+        for (Map.Entry<Integer, Integer[]> entry : rowMap.entrySet()) {
+            if (entry.getKey() >= diveDepth) { //Note: Rounding up to next nearest depth on the table.
+                //Found target cell. Return new Pressure Group letter.
+                Integer[] targetCell = entry.getValue();
+
+                return targetCell;
+            }
+        }
+
+        return null;
+    }
+
+    public String toString() {
+        String divesInfo = ""; //Will return at end.
+
+        if (this.errorFound > 0) {
+            divesInfo += "*WARNING* Error Found at Dive #" + this.errorFound + ": " + this.diveResultsMap.get(this.errorFound).errorMessage + "\n";
+        }
+
+        for (Map.Entry<Integer, SingleDiveData> entry : this.diveResultsMap.entrySet()) {
+            Integer diveNumber = entry.getKey();
+            SingleDiveData diveData = entry.getValue();
+
+            divesInfo += "\nDive #" + diveNumber + ", Depth: " + diveData.diveDepth + ", Time: " + diveData.diveTime + ", Surface Interval Time: " + diveData.surfaceIntervalTime;
+
+            //Show TNT for all non-initial dives.
+            if (diveNumber > 1) {
+                divesInfo += "\n\tTotal Nitrogen Time: " + diveData.totalNitrogenTime;
+            }
+
+            divesInfo += "\n\tEnd-Of-Dive Pressure Group: " + diveData.endOfDivePG;
+            divesInfo += "\n\tDecompression Time Required: " + diveData.decompressionTime;
+            divesInfo += "\n\tPost-Surface-Interval-Time Pressure Group: " + diveData.postSurfaceIntervalPG;
+
+            if (diveData.errorMessage == null) {
+                divesInfo += "\n\tErrors: None";
+            } else {
+                divesInfo += "\n\tError Found: " + diveData.errorMessage;
+            }
+        }
+
+        return divesInfo;
+    }
 }
 
 
-
+/**
+ * Class to hold Table 1 cell data.
+ */
 class TableOneCellOutput {
     String pressureGroup;
     Integer decompressionTime;
 
     public TableOneCellOutput(String PG) {
         this.pressureGroup = PG;
-        this.decompressionTime = null;
+        this.decompressionTime = 0;
     }
 
     public TableOneCellOutput(String PG, Integer DT) {
         this.pressureGroup = PG;
         this.decompressionTime = DT;
+    }
+}
+
+/**
+ * Class to hold all data of a single dive, including calculated results.
+ */
+class SingleDiveData {
+    Integer diveDepth; //From user input
+    Integer diveTime; //From user input
+    Integer surfaceIntervalTime; //From user input
+
+    Integer totalNitrogenTime;
+    String endOfDivePG;
+    Integer decompressionTime;
+    String postSurfaceIntervalPG;
+    String errorMessage; //Will state the FIRST found error.
+
+    public SingleDiveData (Integer depth, Integer time, Integer SIT) {
+        this.diveDepth = depth;
+        this.diveTime = time;
+        this.surfaceIntervalTime = SIT;
+        this.totalNitrogenTime = 0;
+        this.decompressionTime = 0;
+        this.errorMessage = null;
     }
 }
