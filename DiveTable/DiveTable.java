@@ -546,9 +546,6 @@ public class DiveTable {
     public void calculateDiveTableResults (List<Integer> diveInfo) {
         String currentPressureGroup = ""; //Changes as we continuously run through loop.
 
-        //Input: depth, time, SIT
-        //Output: End-of-Dive Pressure Group, post-SIT Pressure Group, decompression stop times.
-
         for (int i = 0; i < diveInfo.size(); i += 3) { //Note: Incrementing by 3, not 1.
 
             Integer diveNumber = ((i / 3) + 1); //Every 3rd element in list indicates a new dive.
@@ -611,7 +608,6 @@ public class DiveTable {
 
     public TableOneCellOutput tableOneLookup(Integer diveDepth, Integer diveTime) {
         for (Map.Entry<Integer, Map<Integer, TableOneCellOutput>> entry : endOfDiveTable.entrySet()) {
-            //System.out.println(entry.getKey() + ", " + entry.getValue());
             if (entry.getKey() >= diveDepth) { //Note: We round up to the next depth key for safety reasons.
                 //Found key. Now iterate through its nested map.
                 Map<Integer, TableOneCellOutput> nestedMap = entry.getValue();
