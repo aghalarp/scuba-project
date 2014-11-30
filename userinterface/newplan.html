@@ -13,13 +13,12 @@
 <title>Dive Planner System</title>
 
    <script type="text/javascript" src="js/jquery.min.js"></script>
-   <script type="text/javascript" src="js/jquery.jqplot.min.js"></script>
-   <script type="text/javascript" src="plugins/jqplot.canvasTextRenderer.min.js"></script>
-   <script type="text/javascript" src="plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
+   <script language="javascript" type="text/javascript" src="css/flot/jquery.js"></script>
+  <script language="javascript" type="text/javascript" src="css/flot/jquery.flot.js"></script>
 
+    <link href="css/flot/examples/examples.css" rel="stylesheet" type="text/css">
     <link href="css/bootstrap.min.css"      rel="stylesheet">
     <link href="css/dashboard.css"          rel="stylesheet">
-    <link href="css/jquery.jqplot.min.css"  rel="stylesheet" />
     <link href="css/examples.css"           rel="stylesheet" />
     <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!--[if lt IE 9]>
@@ -27,39 +26,89 @@
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
+<script>
 
+	$(function() {
 
-<script class="code" type="text/javascript">
-$(document).ready(function(){
-  var plot2 = $.jqplot ('chart2', [[3,7,7,8,1,4,6,6,2,5,11]], {
-      // Give the plot a title.
-      title: 'Dive Profile',
-      // You can specify options for all axes on the plot at once with
-      // the axesDefaults object.  Here, we're using a canvas renderer
-      // to draw the axis label which allows rotated text.
-      axesDefaults: {
-        labelRenderer: $.jqplot.CanvasAxisLabelRenderer
-      },
-      // An axes object holds options for all axes.
-      // Allowable axes are xaxis, x2axis, yaxis, y2axis, y3axis, ...
-      // Up to 9 y axes are supported.
-      axes: {
-        // options for each axis are specified in seperate option objects.
-        xaxis: {
-          label: "Depth.",
-          // Turn off "padding".  This will allow data point to lie on the
-          // edges of the grid.  Default padding is 1.2 and will keep all
-          // points inside the bounds of the grid.
-          pad: 0
-        },
-        yaxis: {
-          label: "Min."
-        }
-      }
-    });
-});
-</script>
+		var plan = [],
+			plan2 = [];
 
+		for (var i = 0; i < 10; i += 0.5) {
+			if (i / 3 == 2 ) {
+			plan.push([i, i+3]);
+			plan2.push([i, i+1]);
+			} else {
+			plan.push([i, i+3]);
+			plan2.push([i, i+2]);
+
+			}	
+		}
+
+		var plot = $.plot("#placeholder", [
+			{ data: plan, label: "First Plan"},
+			{ data: plan2, label: "Second Plan"}
+		], {
+			series: {
+				lines: {
+					show: true
+				},
+				points: {
+					show: true
+				}
+			},
+			grid: {
+				hoverable: true,
+				clickable: true
+			},
+			yaxis: {
+				min: 0,
+				max: 15
+			}
+		});
+
+		$("<div id='tooltip'></div>").css({
+			position: "absolute",
+			display: "none",
+			border: "1px solid #fdd",
+			padding: "2px",
+			"background-color": "#fee",
+			opacity: 0.80
+		}).appendTo("body");
+
+		$("#placeholder").bind("plothover", function (event, pos, item) {
+
+			if ($("#enablePosition:checked").length > 0) {
+				var str = "(" + pos.x.toFixed(2) + ", " + pos.y.toFixed(2) + ")";
+				$("#hoverdata").text(str);
+			}
+
+			if ($("#enableTooltip:checked").length > 0) {
+				if (item) {
+					var x = item.datapoint[0].toFixed(2),
+						y = item.datapoint[1].toFixed(2);
+
+					$("#tooltip").html(item.series.label + " of " + x + " = " + y)
+						.css({top: item.pageY+5, left: item.pageX+5})
+						.fadeIn(200);
+				} else {
+					$("#tooltip").hide();
+				}
+			}
+		});
+
+		$("#placeholder").bind("plotclick", function (event, pos, item) {
+			if (item) {
+				$("#clickdata").text(" - click point " + item.dataIndex + " in " + item.series.label);
+				plot.highlight(item.series, item.datapoint);
+			}
+		});
+
+		// Add the Flot version string to the footer
+
+		$("#footer").prepend("Flot " + $.plot.version + " &ndash; ");
+	});
+
+	</script>
 
   </head>
 
@@ -160,8 +209,20 @@ $(document).ready(function(){
           <div class="row">
 	    <table class="table table-condensed">
 
-<div id="chart2" style="height:300px; width:500px;"></div>
-<div class="code prettyprint">
+	<div id="content">
+
+		<div class="demo-container">
+			<div id="placeholder" class="demo-placeholder"></div>
+		</div>	
+		<p>
+			<label><input id="enablePosition" type="checkbox" checked="checked"></input>Show mouse position</label>
+			<span id="hoverdata"></span>
+			<span id="clickdata"></span>
+		</p>
+
+		<p><label><input id="enableTooltip" type="checkbox" checked="checked"></input>Enable tooltip</label></p>
+
+	<div class="code prettyprint">
 <pre class="code prettyprint brush: js"></pre> 
 
 </table>
