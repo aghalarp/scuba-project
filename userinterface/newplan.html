@@ -33,13 +33,44 @@
 		var newTd1 = newRow.insertCell(0);
 		newTd1.innerHTML ="Dive "+rowsCount;
 		var newTd2 = newRow.insertCell(1);
-		newTd2.innerHTML = "20m.";
+		newTd2.innerHTML = "<input type=text class=form-control placeholder=\"Enter Depth(m])\">";
 		var newTd3 = newRow.insertCell(2);
-		newTd3.innerHTML = "15min.";
-		var newTd4 = newRow.insertCell(3);	
-	        newTd4.innerHTML = "5min.";
+		newTd3.innerHTML = "<input type=text class=form-control placeholder=\"Enter Depth(m])\">";
+		var newTd4 = newRow.insertCell(3);
+		newTd4.innerHTML = "<input type=text class=form-control placeholder=\"Enter Depth(m])\">";
 		var newTd5 = newRow.insertCell(4);
-		newTd5.innerHTML = "<button type=button class=\"btn btn-danger\" onclick=\"removeRow(this.parentNode.parentNode)\">Remove</button>";
+		newTd5.innerHTML = "<button type=button class=\"btn btn-info\" onclick=\"done(this.parentNode.parentNode)\">Done</button>";
+	}
+
+	function planClick(){
+		var planlocation = document.getElementById("location");
+		var datepicker = document.getElementById("datepicker");	
+		if (planlocation.disabled==true) {
+			planlocation.disabled = false;
+		} else {
+			planlocation.disabled = true;
+
+		}	
+		if (datepicker.disabled==true) {
+			datepicker.disabled = false;
+		} else {
+			datepicker.disabled = true;
+
+		}
+	}
+
+	function done(node){
+		var tds = node.cells;
+		for (var i=1; i<4;i++) {
+			if (i==1) {
+				tds[i].innerHTML= (tds[i].children[0].value) ;
+			} 
+			else {
+				tds[i].innerHTML= (tds[i].children[0].value) ;
+			}
+		}
+		tds[4].innerHTML ="<button type=button class=\"btn btn-danger\" onclick=\"removeRow(this.parentNode.parentNode)\">Remove</button>";
+
 	}
 
 	function removeRow(node){
@@ -53,16 +84,12 @@
 
 		var plan = [],
 			plan2 = [];
+	//	var plan = document.getElementById("table1");
 
 		for (var i = 0; i < 10; i += 0.5) {
-			if (i / 3 == 2 ) {
-			plan.push([i, i+3]);
-			plan2.push([i, i+1]);
-			} else {
-			plan.push([i, i+3]);
-			plan2.push([i, i+2]);
-
-			}	
+				plan.push([i, i+3]);
+				plan2.push([i, i+1]);
+			
 		}
 
 		var plot = $.plot("#placeholder", [
@@ -177,10 +204,10 @@
 	    <form class="form-inline" role="from">
 	    Dive plan at &nbsp 
 	      <div class="form-group">
-	        <label class="sr-only" for="exampleInputEmail2">Email address</label>
-		<input type="text" class="form-control" id="lcoation" placeholder="Insert Location">
+	      <input type="text" class="form-control" id="location" placeholder="Insert Location">
 	     &nbsp on &nbsp
 	        <input type="text" class="form-control" id="datepicker" placeholder="Insert Date">
+		<input type="button" class="btn btn-success" onclick="planClick()" value="ok"/>
 	      </div>
 
 	    </form>
@@ -209,7 +236,7 @@
                   <td>25m.</td>
 		  <td>30min.</td>
 		  <td>10min.</td>
-		  <td><button type="button" class="btn btn-danger" >Remove</button></td>
+		  <td><button type="button" class="btn btn-danger" onclick="removeRow(this.parentNode.parentNode)"\ >Remove</button></td>
   		</tr>
 
                 <tr id ="tr2">
@@ -217,7 +244,7 @@
                   <td>15m.</td>
 		  <td>20min.</td>
 		  <td>15min.</td>
-		  <td><button type="button" class="btn btn-danger">Remove</button></td>
+		  <td><button type="button" class="btn btn-danger" onclick="removeRow(this.parentNode.parentNode)"\>Remove</button></td>
   		</tr>
 		         
 	 	<tr id ="tr3">
@@ -225,7 +252,7 @@
                   <td>20m.</td>
 		  <td>15min.</td>
 		  <td>5min.</td>
-		  <td><button type="button" class="btn btn-danger">Remove</button></td>
+		  <td><button type="button" class="btn btn-danger" onclick="removeRow(this.parentNode.parentNode)"\>Remove</button></td>
   		</tr>
 
 	      </tbody>
