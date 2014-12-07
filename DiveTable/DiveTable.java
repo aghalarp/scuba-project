@@ -493,7 +493,7 @@ public class DiveTable {
         // Row J
         Map<Integer, Integer[]> rowJMap = new LinkedHashMap<Integer, Integer[]>();
         rowJMap.put(40, new Integer[]{116, 14});
-        rowJMap.put(50, new Integer[]{87, 4});
+        rowJMap.put(50, new Integer[]{87, 0}); //Changed second value from 4 to 0; 0 is the correct number
         rowJMap.put(60, new Integer[]{70, 0});
         rowJMap.put(70, new Integer[]{57, 0});
         rowJMap.put(80, new Integer[]{48, 0});
