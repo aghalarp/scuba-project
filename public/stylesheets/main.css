@@ -1,0 +1,20 @@
+body {
+
+}
+
+.header {
+  background: url('../images/header.jpeg');
+  background-size: cover;
+  background-position: center;
+  height: 250px;
+}
+
+.navbar {
+  border-radius: 0;
+}
+
+.bio-image {
+  background-size: cover;
+  background-position: center;
+  height: 500px;
+}

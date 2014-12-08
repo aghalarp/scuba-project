@@ -1,0 +1,164 @@
+@(page: String, isLoggedIn: Boolean, isAdmin: Boolean, userInfo: UserInfo, diveplan: DiveTable, plainResultsMap: Map[Integer, List[String]], combinedMapValues: String)
+
+@Main(page, isLoggedIn, isAdmin, userInfo) {
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="well">
+          <div class="row">
+            <div class="col-md-12">
+              <h2>Dive Location: @diveplan.getLocation()</h2>
+              <h2>Date: @diveplan.getDate</h2>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>Dive #</th>
+                    <th>Depth (ft.)</th>
+                    <th>Bottom Time (min.)</th>
+                    <th>Surface Interval Time (min.)</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  <tr>
+                    <td>
+                      Dive 1
+                    </td>
+                    <td>
+                      @diveplan.getDepth1()
+                    </td>
+                    <td>
+                      @diveplan.getBottomTime1()
+                    </td>
+                    <td>
+                      @diveplan.getSurfaceIntervalTime1()
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      Dive 2
+                    </td>
+                    <td>
+                    @diveplan.getDepth2()
+                    </td>
+                    <td>
+                      @diveplan.getBottomTime2()
+                    </td>
+                    <td>
+                      @diveplan.getSurfaceIntervalTime2()
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      Dive 3
+                    </td>
+                    <td>
+                    @diveplan.getDepth3()
+                    </td>
+                    <td>
+                      @diveplan.getBottomTime3()
+                    </td>
+                    <td>
+                      @diveplan.getSurfaceIntervalTime3()
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      Dive 4
+                    </td>
+                    <td>
+                    @diveplan.getDepth4()
+                    </td>
+                    <td>
+                      @diveplan.getBottomTime4()
+                    </td>
+                    <td>
+                      @diveplan.getSurfaceIntervalTime4()
+                    </td>
+                  </tr>
+
+                  <tr>
+                    <td>
+                      Dive 5
+                    </td>
+                    <td>
+                    @diveplan.getDepth5()
+                    </td>
+                    <td>
+                      @diveplan.getBottomTime5()
+                    </td>
+                    <td>
+                      @diveplan.getSurfaceIntervalTime5()
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+
+          <p>
+          @if(isLoggedIn) {
+            <a id="deleteLink" class="btn btn-xs btn-danger" data-toggle="modal" href="#deleteDialog"><i class="glyphicon glyphicon-remove"></i> Delete</a>
+          }
+          </p>
+        </div>
+      </div>
+    </div>
+
+    @if(isLoggedIn) {
+      <div id="deleteDialog" class="modal fade">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+              <h4 class="modal-title">Really delete dive table?</h4>
+            </div>
+            <div class="modal-body">
+              <p>This cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+              <a href="@routes.Application.deleteDiveTable(diveplan.getEventID())" class="btn btn-danger"><i class="glyphicon glyphicon-remove"></i> Delete</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+
+
+
+  <div class="container">
+    <div class="row">
+      <label id="diveresults" value="@combinedMapValues" hidden="yes">@combinedMapValues</label>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="well">
+          <h2>Dive Profile Chart</h2>
+          <div id="content">
+            <div class="demo-container">
+              <div id="placeholder" class="demo-placeholder"></div>
+            </div>
+            <span id="hoverdata"></span>
+            <span id="clickdata"></span>
+
+            <div class="code prettyprint">
+            </div>
+          </div>
+        </div>
+      </div>
+  </div>
+}
